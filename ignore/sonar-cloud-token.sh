@@ -1,0 +1,1 @@
+mvn clean verify sonar:sonar -Dsonar.organization=ept-git -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=36412506b7fa83188d6c1c7df7ab9d3a08d5ef4e -Dsonar.projectKey=seenibu_poc-todos -Pgating

@@ -1,0 +1,1 @@
+docker run -d  -p  9000:9000 -p 9092:9092   sonarqube:7.8-community

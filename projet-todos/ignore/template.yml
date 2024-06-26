@@ -1,0 +1,126 @@
+#PIPELINE NAME see doc at https://docs.github.com/en/actions
+name: Template Pipeline
+
+
+#CONDITION THAT SHOULD TRIGGER PIPELINE EXECUTION
+on:
+  push:
+    branches: [ "main123", "dev123" ] #just an example
+  pull_request:
+    branches: [ "main123", "release123" ] #just an example
+
+
+#JOBS OF THE PIPELINE
+jobs:
+  build:
+
+    #JIN WHAT ENV
+    runs-on: ubuntu-latest
+    #possibility to run in many env >>> runs-on: [ubuntu-latest, macOS-latest, windows-latest]
+    #if: 1 > 2 # you should uncomment this line once inside your own branch
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Java
+      if: 1 > 2
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Dependencies Scan
+      if: 1 > 2
+     # if : ${{ github.ref == 'ref/heads/main' }} ||  ${{ github.ref == 'ref/heads/dev' }} #just an example, this step should be executed if and only this condition is true
+      run: mvn clean verify -DskipTests -Pcve
+
+    - name: Unit Tests
+      if: 1 > 2
+      run: mvn test -Put
+
+    - name: Integration Tests
+      if: 1 > 2
+      run: mvn test -Pit
+
+    - name:  Quality Gate
+      if: 1 > 2
+      uses: sonarsource/sonarqube-scan-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+    
+
+    - name: "Check Quality Gate" #can also use simple or double quotes
+      if: 1 > 2
+      id: sonarqube-quality-gate-check
+      uses: sonarsource/sonarqube-quality-gate-action@master
+      timeout-minutes: 5
+      env:
+       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+
+    - name: Package
+      if: 1 > 2
+      run: mvn -B package  -DskipTests=true #with maven, we pass arg with -D flag and profile with -P flag
+
+
+
+    - uses: mr-smithers-excellent/docker-build-push@v6
+      name: Build & push Docker image
+      if: 1 > 2
+      with:
+        image: docker-hub-repo/image-name
+        registry: docker.io
+        username: ${{secrets.DOCKER_USERNAME}}
+        password: ${{secrets.DOCKER_PASSWORD}}
+
+
+    # see also action  mr-smithers-excellent/docker-build-push@v5
+    # url :g
+    - name: Dockerize
+      if: 1 > 2
+      run: |
+       docker login -u=${{secrets.DOCKER_USERNAME }} -p=${{ secrets.DOCKER_PASSWORD }}
+       docker build -t ${{secrets.DOCKER_REGISTRY_IMAGE }}:${{ github.sha }} -t  ${{secrets.DOCKER_REGISTRY_IMAGE }}:latest .        # docker build -t image:tag_1 -t image:tag_2 .... -t image:tage_n .
+       #docker push ${{secrets.DOCKER_REGISTRY_IMAGE }}:latest # only push latest tag
+       docker push ${{secrets.DOCKER_REGISTRY_IMAGE }} # push all tags
+
+
+    - name: Deploy
+      if: 1 > 2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.WEB_SERVER_IP }}
+        username: ${{ secrets.WEB_SERVER_USERNAME }}
+        key: ${{ secrets.WEB_SERVER_KEY }}
+        port: 22
+        script: | #script to execute once inside the remote computer
+          mkdir -p ~/.ssh
+          touch  ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.WEB_SERVER_IP }} >> ~/.ssh/known_hosts
+          sudo sudo apt-get update
+          sudo apt install docker.io
+          docker --version # just to test installation
+          sudo docker container ls -aq --filter name=cicdeptgitdic1 |xargs --no-run-if-empty sudo docker stop |xargs --no-run-if-empty sudo  docker container rm 
+          sudo docker run --name cicdeptgitdic1  -d -p 80:8080 <<your_docker_hub_user_name>>/todos:latest
+   
+   
+    - name: Wait for deploy to finish
+      if: 1 > 2
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '30s'
+        
+
+    - name : Test deploy
+      if: 1 > 2
+      id: tes-deploy-dev
+      uses: indiesdev/curl@v1.1
+      with:
+          url: http://${{ secrets.WEB_SERVER_IP }}/cicd/_health
+          method: "GET"
+          accept: 200
+          timeout: 5000
+          log-response: true
+          retries: 2
+
