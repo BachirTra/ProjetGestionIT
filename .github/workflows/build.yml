@@ -35,7 +35,6 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Dependencies Scan
-        #if: 1>2
         run: mvn clean verify -DskipTests -Pcve
 
       - name: Unit Testing
@@ -52,9 +51,31 @@ jobs:
           echo "Checking quality gate status..."
           response=$(curl -s -u ${{ secrets.SONAR_TOKEN }}: https://sonarcloud.io/api/qualitygates/project_status?projectKey=seenibu_poc-todos)
           status=$(echo $response | jq -r '.projectStatus.status')
+          reliability=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="reliability_rating").status')
+          security=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="security_rating").status')
+          maintainability=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="sqale_rating").status')
+          coverage=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="coverage").value')
+          duplications=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="duplicated_lines_density").value')
+          bugs=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="bugs").value')
+          vulnerabilities=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="vulnerabilities").value')
+          blockers=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="blocker_violations").value')
+          criticals=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="critical_violations").value')
+          majors=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="major_violations").value')
+
           echo "Quality Gate status: $status"
-          if [ "$status" != "OK" ]; then
-            echo "Quality Gate failed!"
+          echo "Reliability: $reliability"
+          echo "Security: $security"
+          echo "Maintainability: $maintainability"
+          echo "Coverage: $coverage"
+          echo "Duplications: $duplications"
+          echo "Bugs: $bugs"
+          echo "Vulnerabilities: $vulnerabilities"
+          echo "Blockers: $blockers"
+          echo "Criticals: $criticals"
+          echo "Majors: $majors"
+
+          if [ "$status" != "OK" ] || [ "$reliability" != "OK" ] || [ "$security" != "OK" ] || [ "$maintainability" != "OK" ] || [ $(echo "$coverage < 95" | bc) -eq 1 ] || [ $(echo "$duplications >= 1" | bc) -eq 1 ] || [ "$bugs" != "0" ] || [ "$vulnerabilities" != "0" ] || [ "$blockers" != "0" ] || [ "$criticals" != "0" ] || [ "$majors" != "0" ]; then
+            echo "Quality Gate conditions not met!"
             exit 1
           fi
 
