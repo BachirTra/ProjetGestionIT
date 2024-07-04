@@ -386,6 +386,7 @@ class TagResourceTest {
         assertEquals(tagDTO.getName(), response.getBody().getName());
         verify(service, times(1)).findById(anyString());
     }
+    
     @Disabled
     @Test
     void create_ShouldCreateNewTag() {
