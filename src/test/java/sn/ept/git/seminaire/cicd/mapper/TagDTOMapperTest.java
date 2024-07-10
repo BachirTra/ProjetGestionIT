@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import sn.ept.git.seminaire.cicd.ReplaceCamelCase;
 import sn.ept.git.seminaire.cicd.data.TagDTOTestData;
-import sn.ept.git.seminaire.cicd.models.TagDTO;
 import sn.ept.git.seminaire.cicd.mappers.TagMapper;
+import sn.ept.git.seminaire.cicd.models.TagDTO;
 import sn.ept.git.seminaire.cicd.entities.Tag;
 
 import java.util.List;

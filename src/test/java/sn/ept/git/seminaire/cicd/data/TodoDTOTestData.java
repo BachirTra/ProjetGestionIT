@@ -1,9 +1,9 @@
 package sn.ept.git.seminaire.cicd.data;
 
-import sn.ept.git.seminaire.cicd.models.TodoDTO;
-
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import sn.ept.git.seminaire.cicd.models.TodoDTO;
 
 public final class TodoDTOTestData extends TestData {
 

@@ -7,9 +7,9 @@ import org.mapstruct.factory.Mappers;
 import sn.ept.git.seminaire.cicd.ReplaceCamelCase;
 import sn.ept.git.seminaire.cicd.data.TodoDTOTestData;
 import sn.ept.git.seminaire.cicd.entities.Tag;
+import sn.ept.git.seminaire.cicd.mappers.TodoMapper;
 import sn.ept.git.seminaire.cicd.models.TagDTO;
 import sn.ept.git.seminaire.cicd.models.TodoDTO;
-import sn.ept.git.seminaire.cicd.mappers.TodoMapper;
 import sn.ept.git.seminaire.cicd.entities.Todo;
 
 import java.util.List;

@@ -9,6 +9,7 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.cucumber.junit.platform.engine.Cucumber;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -21,8 +22,10 @@ import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import sn.ept.git.seminaire.cicd.models.TodoDTO;
+
 import sn.ept.git.seminaire.cicd.entities.Todo;
+import sn.ept.git.seminaire.cicd.models.TagDTO;
+import sn.ept.git.seminaire.cicd.models.TodoDTO;
 import sn.ept.git.seminaire.cicd.repositories.TodoRepository;
 
 import java.time.Clock;
@@ -32,6 +35,38 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.given;
+
+
+
+
+
+
+
+
+
+
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
+import sn.ept.git.seminaire.cicd.services.ITagService;
+import org.springframework.test.context.ContextConfiguration;
+
+import java.util.ArrayList;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
+
+
+
+
+
+
+
+
 
 @Slf4j
 public class CucumberStepIT {
@@ -71,6 +106,16 @@ public class CucumberStepIT {
                 .all();
 
     }
+
+
+
+
+    @MockBean
+    private ITagService tagService;
+
+    private List<TagDTO> retrievedTags;
+    private TagDTO retrievedTag;
+    private TagDTO savedTag;
 
 
     @Given("acicd_todos table contains data:")
@@ -241,6 +286,109 @@ public class CucumberStepIT {
     @And("description = {string}")
     public void description(String description) {
         this.description=description;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    @Given("There are existing tags in the database")
+    public void thereAreExistingTagsInTheDatabase() {
+        List<TagDTO> tags = new ArrayList<>();
+        tags.add(TagDTO.builder().id("1").name("Tag 1").description("Description 1").build());
+        tags.add(TagDTO.builder().id("2").name("Tag 2").description("Description 2").build());
+        when(tagService.findAll()).thenReturn(tags);
+    }
+
+    @When("I request to retrieve all tags")
+    public void iRequestToRetrieveAllTags() {
+        retrievedTags = tagService.findAll();
+    }
+
+    @Then("I should get a list of tags")
+    public void iShouldGetAListOfTags() {
+        assertNotNull(retrievedTags);
+        assertEquals(2, retrievedTags.size());
+    }
+
+    @Given("There is a tag with ID {string} in the database")
+    public void thereIsATagWithIdInTheDatabase(String id) {
+        TagDTO tag = TagDTO.builder().id(id).name("Tag " + id).description("Description " + id).build();
+        when(tagService.findById(id)).thenReturn(Optional.of(tag));
+    }
+
+    @When("I request to retrieve the tag with ID {string}")
+    public void iRequestToRetrieveTheTagWithId(String id) {
+        retrievedTag = tagService.findById(id).orElse(null);
+    }
+
+    @Then("I should get the tag details")
+    public void iShouldGetTheTagDetails() {
+        assertNotNull(retrievedTag);
+        assertEquals("Tag 1", retrievedTag.getName());
+    }
+
+    @Given("There is an existing tag with ID {string} to delete")
+    public void thereIsAnExistingTagWithIdToDelete(String id) {
+        TagDTO existingTag = TagDTO.builder().id(id).name("Existing Tag").description("Existing Description").build();
+        when(tagService.findById(id)).thenReturn(Optional.of(existingTag));
+    }
+
+    @When("I request to delete the tag with ID {string}")
+    public void iRequestToDeleteTheTagWithId(String id) {
+        doNothing().when(tagService).delete(id);
+        tagService.delete(id);
+        verify(tagService, times(1)).delete(id);
+    }
+
+    @Then("the tag should be deleted successfully")
+    public void theTagShouldBeDeletedSuccessfully() {
+        // Verification is done in the "When" step with Mockito verify assertions
+    }
+
+    @Given("I have a new tag to add")
+    public void iHaveANewTagToAdd() {
+        TagDTO newTag = TagDTO.builder().name("New Tag").description("New Description").build();
+        when(tagService.save(newTag)).thenReturn(TagDTO.builder().id("3").name("New Tag").description("New Description").build());
+    }
+
+    @When("I request to add the tag")
+    public void iRequestToAddTheTag() {
+        TagDTO newTag = TagDTO.builder().name("New Tag").description("New Description").build();
+        savedTag = tagService.save(newTag);
+    }
+
+    @Then("the tag should be saved successfully")
+    public void theTagShouldBeSavedSuccessfully() {
+        assertNotNull(savedTag);
+        assertEquals("3", savedTag.getId());
+    }
+
+    @Given("There is an existing tag with ID {string}")
+    public void thereIsAnExistingTagWithId(String id) {
+        TagDTO existingTag = TagDTO.builder().id(id).name("Existing Tag").description("Existing Description").build();
+        when(tagService.findById(id)).thenReturn(Optional.of(existingTag));
+        when(tagService.update(eq(id), any(TagDTO.class))).thenReturn(existingTag);
+    }
+
+    @When("I request to update the tag with ID {string}")
+    public void iRequestToUpdateTheTagWithId(String id) {
+        TagDTO updatedTag = TagDTO.builder().id(id).name("Updated Tag").description("Updated Description").build();
+        TagDTO result = tagService.update(id, updatedTag);
+        assertNotNull(result);
+        assertEquals("Updated Tag", result.getName());
+    }
+
+    @Then("the tag details should be updated successfully")
+    public void theTagDetailsShouldBeUpdatedSuccessfully() {
+        // Verification is done in the "When" step with Mockito verify assertions
     }
 
 
