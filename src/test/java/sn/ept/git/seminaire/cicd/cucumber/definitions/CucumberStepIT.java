@@ -21,8 +21,12 @@ import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
+
+import sn.ept.git.seminaire.cicd.models.TagDTO;
 import sn.ept.git.seminaire.cicd.models.TodoDTO;
+import sn.ept.git.seminaire.cicd.entities.Tag;
 import sn.ept.git.seminaire.cicd.entities.Todo;
+import sn.ept.git.seminaire.cicd.repositories.TagRepository;
 import sn.ept.git.seminaire.cicd.repositories.TodoRepository;
 
 import java.time.Clock;
@@ -33,24 +37,32 @@ import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.given;
 
+
+
+
 @Slf4j
 public class CucumberStepIT {
-
 
     public static final String COMPLETED = "completed";
     private final static String BASE_URI = "http://localhost";
     public static final String API_PATH = "/cicd/api/todos";
+    public static final String API_PATH1 = "/cicd/api/tags";
     public static final String ID = "id";
     public static final String TITLE = "title";
+    public static final String NAME = "name";
     public static final String DESCRIPTION = "description";
     @LocalServerPort
     private int port;
     private String title;
+    private String name;
     private String description;
     private Response response;
-    private static final ObjectMapper objectMapper = new ObjectMapper();;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     @Autowired
     private TodoRepository todoRepository;
+    @Autowired
+    private TagRepository tagRepository;
 
 
     @BeforeAll
@@ -61,6 +73,7 @@ public class CucumberStepIT {
     @Before
     public void init(){
         todoRepository.deleteAll();
+        tagRepository.deleteAll();
     }
     protected RequestSpecification request() {
         RestAssured.baseURI = BASE_URI;
@@ -71,6 +84,7 @@ public class CucumberStepIT {
                 .all();
 
     }
+
 
 
     @Given("acicd_todos table contains data:")
@@ -102,7 +116,7 @@ public class CucumberStepIT {
 
 
     @Then("the returned http status is {int}")
-    public void theHttpStatusIs(int status) {
+    public void cucumberStepVerifyHttpStatus(int status) {
         response.then()
                 .assertThat()
                 .statusCode(status);
@@ -239,8 +253,128 @@ public class CucumberStepIT {
     }
 
     @And("description = {string}")
-    public void description(String description) {
+    public void cucumberStepDescription(String description) {
         this.description=description;
+    }
+
+
+    //------------------------TagServiceStepsIT---------------------------
+    @Given("acicd_tags table contains data:")
+    public void tagTableTagContainsData(DataTable dataTable) {
+        List<Map<String, String>> data = dataTable.asMaps(String.class, String.class);
+        List<Tag> tagsList = data
+        .stream()
+        .map((Map<String, String> line) -> Tag.builder()
+        .id(line.get(ID))
+        .name(line.get(NAME))
+        .description(line.get(DESCRIPTION))
+        .version(0)
+        .createdDate(Instant.now(Clock.systemUTC()))
+        .lastModifiedDate(Instant.now(Clock.systemUTC()))
+        .build()
+    )
+    .collect(Collectors.toList());
+    tagRepository.saveAllAndFlush(tagsList);
+    }
+
+    @When("call find tag by id with id={string}")
+    public void tagCallFindTagByIdWithId(String id) {
+        response = request()
+                .when().get(API_PATH1 + "/" + id);
+    }
+
+    @Then("the tag returned http status is {int}")
+    public void tagServiceStepVerifyHttpStatus(int status) {
+        response.then()
+                .assertThat()
+                .statusCode(status);
+    }
+
+    @And("the returned tag has properties name={string} and description={string}")
+    public void tagTheReturnedTagHasPropertiesNameAndDescription(String name, String description) {
+        response.then()
+                .assertThat()
+                .body(NAME, CoreMatchers.equalTo(name))
+                .body(DESCRIPTION, CoreMatchers.equalTo(description));
+    }
+
+    @When("call find all tags with page = {int} and size = {int} and sort={string}")
+    public void tagCallFindAllTags(int page, int size, String sort) {
+    log.info("Calling find all tags with page={}, size={}, sort={}", page, size, sort);
+    response = request().contentType(ContentType.JSON)
+            .log().all()
+            .when().get(API_PATH1 + String.format("?page=%d&size=%d&sort=%s", page, size, sort));
+    log.info("Response status: {}", response.getStatusCode());
+    log.info("Response body: {}", response.getBody().asString());
+    }
+
+    @And("the tag returned list has {int} elements")
+    public void tagTheReturnedListHasElements(int size) {
+        Assertions.assertThat(response.jsonPath().getList("content"))
+                .hasSize(size);
+    }
+
+    @And("that tag list contains values:")
+    public void tagThatListContainsValues(DataTable dataTable) {
+    List<Map<String, String>> data = dataTable.asMaps(String.class, String.class);
+    List<Map<String, Object>> responseContent = response.jsonPath().getList("content");
+    log.info("Response content: {}", responseContent);
+    
+    data.forEach(expectedItem -> {
+        boolean found = responseContent.stream().anyMatch(actualItem -> 
+            expectedItem.get(NAME).equals(actualItem.get(NAME)) &&
+            expectedItem.get(DESCRIPTION).equals(actualItem.get(DESCRIPTION))
+        );
+        Assertions.assertThat(found).isTrue();
+    });
+    }
+
+    @When("call add tag")
+    public void tagCallAddTag() {
+        TagDTO requestBody = TagDTO.builder().name(this.name).description(this.description).build();
+        response = request()
+                .body(requestBody)
+                .when().post(API_PATH1);
+    }
+
+    @And("the created tag has properties name={string} and description={string}")
+    public void tagTheCreatedTagHasPropertiesNameAndDescription(String name, String description) {
+        response.then()
+                .assertThat()
+                .body(NAME, CoreMatchers.equalTo(name))
+                .body(DESCRIPTION, CoreMatchers.equalTo(description));
+    }
+
+    @When("call update tag with id={string}")
+    public void tagCallUpdateTagWithId(String id) {
+        TagDTO requestBody = TagDTO.builder().name(this.name).description(this.description).build();
+        response = request()
+                .body(requestBody)
+                .when().put(API_PATH1 + "/" + id);
+    }
+
+    @And("the updated tag has properties name={string} and description={string}")
+    public void tagTheUpdatedTagHasPropertiesNameAndDescription(String name, String description) {
+        response.then()
+                .assertThat()
+                .body(NAME, CoreMatchers.equalTo(name))
+                .body(DESCRIPTION, CoreMatchers.equalTo(description));
+    }
+
+    @When("call delete tag with id={string}")
+    public void tagCallDeleteTagWithId(String id) {
+        response = request()
+                .when().delete(API_PATH1 + "/" + id);
+    }
+
+    @And("name = {string}")
+    public void tagName(String name) {
+        this.name = name;
+    }
+
+    @And("description = {string} for tag")
+    public void tagServiceStepDescription(String description) {
+        this.description = description;
     }
 
 

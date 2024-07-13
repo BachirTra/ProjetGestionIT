@@ -7,7 +7,7 @@ Feature: API to manage Tag Items
       | 1  | tag name 1  | description 1   |
       | 2  | tag name 2  | description 2   |
     When call find tag by id with id="<id>"
-    Then the returned http status is 200
+    Then the tag returned http status is 200
     And the returned tag has properties name="<name>" and description="<description>"
     Examples:
       | id | name       | description   |
@@ -20,9 +20,9 @@ Feature: API to manage Tag Items
       | 1  | tag name 1  | description 1   |
       | 2  | tag name 2  | description 2   |
     When call find all tags with page = 0 and size = 10 and sort="name,asc"
-    Then the returned http status is 200
-    And the returned list has 2 elements
-    And that list contains values:
+    Then the tag returned http status is 200
+    And the tag returned list has 2 elements
+    And that tag list contains values:
       | name       | description   |
       | tag name 1 | description 1 |
       | tag name 2 | description 2 |
@@ -33,9 +33,9 @@ Feature: API to manage Tag Items
       | id | name        | description     |
       | 1  | tag name 1  | description 1   |
     And name = "<name>"
-    And description = "<description>"
+    And description = "<description>" for tag
     When call add tag
-    Then the returned http status is 201
+    Then the tag returned http status is 201
     And the created tag has properties name="<name>" and description="<description>"
     Examples:
       | name       | description   |
@@ -47,9 +47,9 @@ Feature: API to manage Tag Items
       | id | name        | description     |
       | 1  | tag name 1  | description 1   |
     And name = "<name>"
-    And description = "<description>"
+    And description = "<description>" for tag
     When call update tag with id="<id>"
-    Then the returned http status is 202
+    Then the tag returned http status is 202
     And the updated tag has properties name="<name>" and description="<description>"
     Examples:
       | id | name           | description     |
@@ -62,7 +62,7 @@ Feature: API to manage Tag Items
       | 1  | tag name 1  | description 1   |
       | 2  | tag name 2  | description 2   |
     When call delete tag with id="1"
-    Then the returned http status is 204
+    Then the tag returned http status is 204
 
   @REFEPTGITDIC12024-00025
   Scenario: Find tag by id with a non-existing id should return 404
@@ -70,7 +70,7 @@ Feature: API to manage Tag Items
       | id | name        | description     |
       | 1  | tag name 1  | description 1   |
     When call find tag by id with id="2"
-    Then the returned http status is 404
+    Then the tag returned http status is 404
 
   @REFEPTGITDIC12024-00026
   Scenario: Add tag with an existing name should return 409
@@ -78,6 +78,6 @@ Feature: API to manage Tag Items
       | id | name        | description     |
       | 1  | tag name 1  | description 1   |
     When name = "tag name 1"
-    And description = "new description"
+    And description = "new description" for tag
     When call add tag
-    Then the returned http status is 409
+    Then the tag returned http status is 409
