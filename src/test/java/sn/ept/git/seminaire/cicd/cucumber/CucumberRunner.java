@@ -12,6 +12,8 @@ import org.junit.platform.suite.api.*;
         @ConfigurationParameter(key = CucumberRunner.PLUGIN_PROPERTY_NAME, value = CucumberRunner.PLUGIN_PROPERTY_NAME_VALUE),
         @ConfigurationParameter(key = CucumberRunner.PUBLISH_QUIET, value = CucumberRunner.PUBLISH_QUIET_VALUE)
 })
+
+
 public class CucumberRunner {
     public static final String GLUE_PROPERTY = "cucumber.glue";
     public static final String GLUE_PROPERTY_VALUE = "sn.ept.git.seminaire.cicd.cucumber";
