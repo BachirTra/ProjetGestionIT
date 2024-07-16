@@ -28,12 +28,12 @@ public class ReplaceCamelCase extends DisplayNameGenerator.Standard {
                 .orElse("testSansNomCaNeDevraitJamaisArriver")
                 .chars()
                 .forEach(c -> {
-                    char currentChar =(char)c;
+                    char currentChar = (char) c;
                     if (Character.isUpperCase(currentChar)) {
                         displayedName
                                 .append(' ')
                                 .append(Character.toLowerCase(currentChar));
-                    }else if (currentChar=='_') {
+                    } else if (currentChar == '_') {
                         displayedName.append(' ');
                     } else {
                         displayedName.append(currentChar);
