@@ -30,7 +30,7 @@
 
         <!-- JaCoCo Properties -->
 
-        <sonar.organization>BachirTra</sonar.organization>
+        <sonar.organization>bachirtra</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.projectKey>BachirTra_ProjetGestionIT</sonar.projectKey>
         <sonar.projectName>ProjetGestionIT</sonar.projectName>

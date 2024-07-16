@@ -120,12 +120,11 @@ jobs:
         run: mvn test -Pit
 
       - name: Quality Gate
-        run: mvn clean verify sonar:sonar -Dsonar.organization=ept-git -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=${{ secrets.SONAR_TOKEN }} -Dsonar.projectKey=seenibu_poc-todos
-
+        run: mvn clean verify sonar:sonar -Dsonar.organization=bachirtra -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=${{ secrets.SONAR_TOKEN }} -Dsonar.projectKey=BachirTra_ProjetGestionIT
       - name: Check Quality Gate
         run: |
           echo "Checking quality gate status..."
-          response=$(curl -s -u ${{ secrets.SONAR_TOKEN }}: https://sonarcloud.io/api/qualitygates/project_status?projectKey=seenibu_poc-todos)
+          response=$(curl -s -u ${{ secrets.SONAR_TOKEN }}: https://sonarcloud.io/api/qualitygates/project_status?projectKey=BachirTra_ProjetGestionIT)
           status=$(echo $response | jq -r '.projectStatus.status')
           reliability=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="reliability_rating").status')
           security=$(echo $response | jq -r '.projectStatus.conditions[] | select(.metricKey=="security_rating").status')
@@ -172,7 +171,7 @@ jobs:
         with:
           context: .
           push: false
-          tags: mouhamadoucisse/poc_todos:pr-${{ github.event.pull_request.number }}
+          tags: bachirtra/gestionprojetit:pr-${{ github.event.pull_request.number }}
 
       - name: Wait for deploy to finish
         run: sleep 30
